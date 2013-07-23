@@ -1,4 +1,5 @@
 
+from dirsrvtests_log import *
 from standAloneDS import *
 import dirutil
 import shutil
@@ -64,7 +65,7 @@ class Ticket47331():
         self.step = 0
 
     def __log_msg(self, phase, msg):
-        print 'Test %d [%s (%d)]: %s' % (self.bugid, phase, self.__get_step(), msg)
+        return "Test %6d [%-7s (%2d)]: %s" % (self.bugid, phase, self.__get_step(), msg)
         #print '{0:10} ==> {1:10d}'.format(phase, self.bugid)
 
     def __init_step(self):
@@ -80,33 +81,33 @@ class Ticket47331():
         self.__init_step()
 
         if not self.instance is None:
-            self.__log_msg("startup", "Instance already created")
+            logging_display(INFO, self.__log_msg("startup", "Instance already created"))
             return 1
         self.__next_step()
 
         self.instance = StandAloneDS("standalone", self.bugid)
         if self.instance.create_instance() != 0:
-            self.__log_msg("startup", "Fail to create the instance")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the instance"))
             return 1
         self.__next_step()
 
-        self.__log_msg("startup", "PASS")
+        console_display(self.__log_msg("startup", "PASS"))
         return 0
 
     def cleanup(self):
         self.__init_step()
 
         if self.instance is None:
-            self.__log_msg("cleanup", "Invalid instance value")
+            logging_display(WARNING, self.__log_msg("cleanup", "Invalid instance value"))
             return 1
         self.__next_step()
 
         if self.instance.remove_instance() != 0:
-            self.__log_msg("cleanup", "Fail to cleanup the instance")
+            logging_display(WARNING, self.__log_msg("cleanup", "Fail to cleanup the instance"))
             return 1
         self.__next_step()
 
-        self.__log_msg("cleanup", "PASS")
+        console_display(self.__log_msg("cleanup", "PASS"))
         return 0
 
     def cleanup_force(self):
@@ -116,11 +117,11 @@ class Ticket47331():
         self.instance.create_instance(False)
 
         if self.instance.remove_instance() != 0:
-            self.__log_msg("cleanup", "Fail to cleanup the instance")
+            logging_display(WARNING, self.__log_msg("cleanup", "Fail to cleanup the instance"))
             return 1
         self.__next_step()
 
-        self.__log_msg("cleanup", "PASS")
+        console_display(self.__log_msg("cleanup", "PASS"))
         return 0
         self.__next_step()
 
@@ -137,7 +138,7 @@ class Ticket47331():
         rc = dirutil.ldapmodify(instance.get_hostname(), instance.get_normal_port(), instance.get_rootDN(), instance.get_rootDNPwd(), inf_fd.name, "-a -c")
         dirutil.rm_ldapmodify_file(inf_fd)
         if rc != 0:
-            self.__log_msg("run", "Fail Add entries")
+            logging_display(WARNING, self.__log_msg("run", "Fail Add entries"))
             return 1
         self.__next_step()
 
@@ -147,7 +148,7 @@ class Ticket47331():
         rc = dirutil.ldapmodify(instance.get_hostname(), instance.get_normal_port(), instance.get_rootDN(), instance.get_rootDNPwd(), inf_fd.name, "-a -c")
         dirutil.rm_ldapmodify_file(inf_fd)
         if rc != 0:
-            self.__log_msg("run", "Fail Del aci ")
+            logging_display(WARNING, self.__log_msg("run", "Fail Del aci "))
             return 1
         self.__next_step()
 
@@ -158,7 +159,7 @@ class Ticket47331():
         rc = dirutil.ldapmodify(instance.get_hostname(), instance.get_normal_port(), instance.get_rootDN(), instance.get_rootDNPwd(), inf_fd.name, "-a -c")
         dirutil.rm_ldapmodify_file(inf_fd)
         if rc != 0:
-            self.__log_msg("run", "Fail ADD aci ")
+            logging_display(WARNING, self.__log_msg("run", "Fail ADD aci "))
             return 1
         self.__next_step()
 
@@ -170,7 +171,7 @@ class Ticket47331():
             if line.startswith("dn: "):
               nb_entries += 1
         if nb_entries != 1:
-            self.__log_msg("run", "%s retrieved %d entries (1 expected)" % CN_TEST1, nb_entries)
+            logging_display(WARNING, self.__log_msg("run", "%s retrieved %d entries (1 expected)" % CN_TEST1, nb_entries))
             return 1
         self.__next_step()
 
@@ -178,7 +179,7 @@ class Ticket47331():
         fail = False
         
         if fail:
-            self.__log_msg("run", "Retrieved entry \"%s\" is not the expected (%s)" % retrieved_dn, expected_dn)
+            logging_display(WARNING, self.__log_msg("run", "Retrieved entry \"%s\" is not the expected (%s)" % retrieved_dn, expected_dn))
             return 1
         self.__next_step()
 
@@ -194,7 +195,7 @@ class Ticket47331():
             if line.startswith("dn: "):
                 nb_entries += 1
         if nb_entries != 1:
-            self.__log_msg("run", "%s retrieved %d entries (1 expected)" % CN_TEST2, nb_entries)
+            logging_display(WARNING, self.__log_msg("run", "%s retrieved %d entries (1 expected)" % CN_TEST2, nb_entries))
             return 1
         self.__next_step()
 
@@ -208,11 +209,11 @@ class Ticket47331():
                     fail=True
                     break
         if fail:
-            self.__log_msg("run", "Retrieved entry \"%s\" is not the expected (%s)" % retrieved_dn, expected_dn)
+            logging_display(WARNING, self.__log_msg("run", "Retrieved entry \"%s\" is not the expected (%s)" % retrieved_dn, expected_dn))
             return 1
         self.__next_step()
 
-        self.__log_msg("run", "PASS")
+        console_display(self.__log_msg("run", "PASS"))
         return 0
 
 

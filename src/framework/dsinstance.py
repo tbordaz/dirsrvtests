@@ -1,4 +1,5 @@
 from common import *
+from dirsrvtests_log import *
 import replication
 import dirutil
 import os
@@ -60,15 +61,6 @@ class DsInstance():
         return self.fqdn
     
     def create_instance(self):
-        #print self.serverid
-        #print self.realm_name
-        #print self.fqdn
-        #print self.dm_password
-        #print self.suffix
-        #print self.port
-
-        #print "Creating the DS"
-        #print inf_txt
         inf_txt = dirutil.template_str(INF_TEMPLATE, self.sub_dict)
         inf_fd = dirutil.write_tmp_file(inf_txt)
         if dirutil.file_exists(CMD_SETUP):
@@ -81,8 +73,7 @@ class DsInstance():
             self.open_ports.append(self.port);
             return 0
         else:
-            str = "Failure missing " + CMD_SETUP
-            print str
+            slogging_display(CRITICAL, "Failure missing " + CMD_SETUP)
             return 1
 
     def remove_instance(self):
@@ -96,8 +87,7 @@ class DsInstance():
             dirutil.run(args)
             return 0
         else:
-            str = "Failure: command missing " + CMD_REMOVE
-            print str
+            logging_display(CRITICAL, "Failure: command missing " + CMD_REMOVE)
             return 1
 
     def setup_master(self, replicaId):

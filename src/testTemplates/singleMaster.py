@@ -1,3 +1,4 @@
+from framework.dirsrvtests_log import console_display
 from singleMasterDS import *
 import dirutil
 import shutil
@@ -26,7 +27,7 @@ class Myticketname():
 
 
     def __log_msg(self, phase, msg):
-        print 'Test %d [%s (%d)]: %s' % (self.bugid, phase, self.__get_step(), msg)
+        return "Test %6d [%-7s (%2d)]: %s" % (self.bugid, phase, self.__get_step(), msg))
         #print '{0:10} ==> {1:10d}'.format(phase, self.bugid)
 
     def __init_step(self):
@@ -42,45 +43,43 @@ class Myticketname():
     def startup(self):
         self.__init_step()
 
-        self.__log_msg("startup", "begin")
         # Allocate the topology
         if self.topology is not None:
-            self.__log_msg("startup", "topology already initialized")
+            logging_display(INFO, self.__log_msg("startup", "topology already initialized"))
         self.topology = SingleMasterDS("master", "consumer", self.bugid)
         self.__next_step()
 
         # create the master/consumer instances
         if self.topology.create() != 0:
-            self.__log_msg("startup", "Fail to create the singleMaster topology")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the singleMaster topology"))
             return 1
         self.__next_step()
 
         # setup replication
         if self.topology.setup_replication() != 0:
-            self.__log_msg("startup", "Fail to create the replication topology")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the replication topology"))
             return 1
         self.__next_step()
 
-        self.__log_msg("startup", "PASS")
+        console_display(self.__log_msg("startup", "PASS"))
         return 0
 
     def cleanup(self):
         self.__init_step()
 
-        self.__log_msg("cleanup", "begin")
         if self.topology.remove() != 0:
-            self.__log_msg("cleanup", "Fail to remove the singleMaster topology")
+            logging_display(WARNING, self.__log_msg("cleanup", "Fail to remove the singleMaster topology"))
             return 1
         self.__next_step()
 
-        self.__log_msg("cleanup", "PASS")
+        console_display(self.__log_msg("cleanup", "PASS"))
         return 0
 
 
 
     def run(self):
         self.__init_step()
-        self.__log_msg("run", "begin")
 
-        self.__log_msg("run", "PASS")
+
+        console_display(self.__log_msg("run", "PASS"))
         return 0

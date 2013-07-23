@@ -83,15 +83,15 @@ class StandAloneDS():
         def __valid_inst_info(self):
             ports = dirutil.check_ports(self.normal_port, self.secure_port)
             if not ((ports[0] is True) and (ports[1] is True)):
-                print "Port ldap:%d and/or ldaps:%d already taken" % (self.normal_port, self.secure_port)
+                logging_display(WARNING, "Port ldap:%d and/or ldaps:%d already taken" % (self.normal_port, self.secure_port))
                 return False
 
             if self.hostname is None:
-                print "Invalid hostname"
+                logging_display(WARNING, "Invalid hostname")
                 return False
 
             if self.domain_name is None:
-                print "Invalid domain name"
+                logging_display(WARNING, "Invalid domain name")
                 return False
 
             return True
@@ -106,22 +106,22 @@ class StandAloneDS():
             #print "gourpID=" + self.groupID
             self.dsinstance = DsInstance(self.serverid, self.domain_name, self.hostname, self.rootDNPwd, self.suffix , self.userID, self.groupID, self.normal_port )
             if (realCreation and (self.dsinstance.create_instance() != 0)):
-                print "Fail to create the instance"
+                logging_display(WARNING, "Fail to create the instance")
                 return 1
             else:
-                print "     - Instance created"
+                logging_display(INFO, "     - Instance created")
                 return 0
 
 
         def remove_instance(self):
             if self.dsinstance == None:
-                print "Error: no instance to remove"
+                logging_display(WARNING, "Error: no instance to remove")
                 return 1
             if self.dsinstance.remove_instance() != 0:
-                print "Fail to remove the instance"
+                logging_display(WARNING, "Fail to remove the instance")
                 return 1
             else:
-                print "     - Instance removed"
+                logging_display(INFO, "     - Instance removed")
                 return 0
 
 

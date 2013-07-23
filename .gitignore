@@ -1,0 +1,5 @@
+# Log directory   #
+###################
+logs/
+
+src/framework/*.pyc

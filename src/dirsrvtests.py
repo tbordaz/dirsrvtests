@@ -1,3 +1,4 @@
+import os.path
 
 import common
 import UserString
@@ -18,6 +19,20 @@ import tempfile
 import base64
 import stat
 import grp
+import logging
+from dirsrvtests_log import *
+
+
+
+#logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s')
+#logging.basicConfig(filename='example.log',level=logging.DEBUG)
+
+#logging_init()
+#logging_display(DEBUG, 'This message should go to the log file')
+#console_init()
+#console_display("message for the console")
+#logging_display(WARNING, 'And this, too')
+#quit()
 
 
 dirsrvUserCreated = False
@@ -43,11 +58,22 @@ def getTestModules(command):
 
 def initialization():
     global dirsrvGrpCreated, dirsrvUserCreated
+    
+    #
+    # first thing to do to allow logging
+    #
+    if logging_init(sys.argv[0]) != 0:
+        return 1
+    console_init()
+
+    #
+    # misc.
+    #
     dirutil.workaround_ticket47394()
     dirutil.selinuxCheckPortLabel()
     dirsrvGrpCreated, dirsrvUserCreated, rc = dirutil.check_dirsrv_user()
     if rc != 0:
-        print "Initialization failed"
+        logging_display(CRITICAL, "Initialization failed")
         return 1
     
     return 0
@@ -68,6 +94,7 @@ def terminaison():
 # list the specific tests to run (e.g "ticket570")
 listSpecificTests = []
 
+
 # list the specific directory that are NOT tests
 listDirsToSkip = ["testTemplates", "framework"]
 
@@ -80,13 +107,13 @@ cleanup_success = 0
 
 #initialization required before running the tests
 if initialization() != 0:
-    print "Initialization failed. Stop the tests"
+    logging_display(CRITICAL, "Initialization failed. Stop the tests")
     quit()
 
 # retrieve all the available tests
 testModules = getTestModules(sys.argv[0])
 nbTests = len(testModules)
-print "Bugs fixes verification (%d bugs)" % nbTests
+console_display("Bugs fixes verification (%d bugs)" % nbTests)
 for testModule in testModules:
     
     # import the module containing the test
@@ -110,11 +137,11 @@ for testModule in testModules:
             cleanup_success += 1
 
 if nbTests > 0:
-    print "\n\n Results:"
-    print "\tstartup: %d%%" % (100*startup_success/len(testModules))
-    print "\trun    : %d%%" % (100*run_success/len(testModules))
-    print "\tcleanup: %d%%" % (100*cleanup_success/len(testModules))
+    console_display("\n\t Results:")
+    console_display("\tstartup: %d%%" % (100*startup_success/len(testModules)))
+    console_display("\trun    : %d%%" % (100*run_success/len(testModules)))
+    console_display("\tcleanup: %d%%" % (100*cleanup_success/len(testModules)))
 
 if terminaison() != 0:
-    print "Terminaison failed, please clean up..."
+    logging_display(CRITICAL, "Terminaison failed, please clean up...")
     quit()

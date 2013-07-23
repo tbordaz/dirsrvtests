@@ -1,3 +1,4 @@
+from dirsrvtests_log import *
 from common import *
 import string
 import re
@@ -12,6 +13,9 @@ import decimal
 import sys
 import grp
 import pwd
+import logging
+
+module_logger = logging.getLogger('dirutil')
 
 try:
     from subprocess import CalledProcessError
@@ -28,8 +32,6 @@ except ImportError:
             return "Command '%s' returned non-zero exit status %d" % (self.cmd, self.returncode)
 
 
-LDAPMODIFY = "/bin/ldapmodify"
-LDAPSEARCH = "/bin/ldapsearch"
 
 def class2bugid(object):
     name = object.__class__.__name__
@@ -38,7 +40,7 @@ def class2bugid(object):
         bugid = name[idx.start()::]
         if decimal.Decimal(bugid):
               return bugid
-    print 0
+    return 0
 
 def template_str(txt, vars):
     val = string.Template(txt).substitute(vars)
@@ -157,7 +159,6 @@ def run(args, stdin=None, raiseonerr=True,
     arg_string = nolog_replace(' '.join(args), nolog)
     #root_logger.debug('Starting external process')
     #root_logger.debug('args=%s' % arg_string)
-    #print "starting args=%s" % arg_string
 
     try:
         p = subprocess.Popen(args, stdin=p_in, stdout=p_out, stderr=p_err,
@@ -166,12 +167,12 @@ def run(args, stdin=None, raiseonerr=True,
         stdout,stderr = str(stdout), str(stderr)    # Make pylint happy
     except KeyboardInterrupt:
         #root_logger.debug('Process interrupted')
-        print "Process interrupted"
+        logging_display(WARNING, "Process interrupted")
         p.wait()
         raise
     except:
         #root_logger.debug('Process execution failed')
-        print "Process execution failed"
+        logging_display(WARNING, "Process execution failed")
         raise
 
     #root_logger.debug('Process finished, return code=%s', p.returncode)
@@ -181,8 +182,6 @@ def run(args, stdin=None, raiseonerr=True,
     if capture_output:
         stdout = nolog_replace(stdout, nolog)
         stderr = nolog_replace(stderr, nolog)
-        #print stdout
-        #print stderr
         #root_logger.debug('stdout=%s' % stdout)
         #root_logger.debug('stderr=%s' % stderr)
 
@@ -259,15 +258,15 @@ def rm_ldapmodify_file(inf_fd):
 def ldapmodify(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, inputFile=None, flags=None, raiseErr=True):
 
     if inputFile is None:
-        print "ldapmodify: Invalid input file"
+        logging_display(WARNING, "ldapmodify: Invalid input file")
         return 1
 
     if hostname is None:
-        print "ldapmodify: Invalid host name"
+        logging_display(WARNING, "ldapmodify: Invalid host name")
         return 1
 
     if ((port is None) or (port <= 0) or (port > 60000)):
-        print "ldapmodify: Invalid port number"
+        logging_display(WARNING, "ldapmodify: Invalid port number")
         return 1
 
     if bind_dn is None:
@@ -278,7 +277,7 @@ def ldapmodify(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, inputFi
     if file_exists(inputFile):
 
         # this is the basic command
-        args = [LDAPMODIFY, "-h", hostname, "-p", str(port), "-D", str(bind_dn), "-w", str(bind_dn_pwd), "-f", inputFile]
+        args = [CMD_LDAPMODIFY, "-h", hostname, "-p", str(port), "-D", str(bind_dn), "-w", str(bind_dn_pwd), "-f", inputFile]
 
         # Then add the optional flags
         for x in flags.split(" "):
@@ -287,22 +286,22 @@ def ldapmodify(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, inputFi
         # do no catch error (False) but print stdout/stderr if command fails
         stdout, stderr, rc = run(args, None, False)
         if rc != 0:
-            print stdout
-            print stderr
+            logging_display(WARNING, stdout)
+            logging_display(WARNING,  stderr)
 
         return rc
     else:
-        print "ldapmodify: File not existing (%s)" % inputFile
+        logging_display(WARNING, "ldapmodify: File not existing (%s)" % inputFile)
         return 1
 
 def ldapsearch(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, base=None, filter=None, scope=None, attributes=None, raiseErr=True):
 
     if hostname is None:
-        print "ldapsearch: Invalid host name"
+        logging_display(WARNING, "ldapsearch: Invalid host name")
         return 1
 
     if ((port is None) or (port <= 0) or (port > 60000)):
-        print "ldapsearch: Invalid port number"
+        logging_display(WARNING, "ldapsearch: Invalid port number")
         return 1
 
     if bind_dn is None:
@@ -311,7 +310,7 @@ def ldapsearch(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, base=No
         bind_dn_pwd = ""
 
     if base is None:
-        print "ldapsearch: Invalid base DN"
+        logging_display(WARNING, "ldapsearch: Invalid base DN")
         return 1
     #if base[0] != '"':
     #    base = "\"%s\"" % base
@@ -323,21 +322,21 @@ def ldapsearch(hostname=None, port=None, bind_dn=None, bind_dn_pwd=None, base=No
     #    filter = "\"%s\"" % filter
 
     if scope is None:
-        scope = "subtree"
+        scope = SCOPE_SUB
 
     if attributes is None:
         attributes = "*"
 
 
     # this is the basic command
-    args = [LDAPSEARCH, "-LLL", "-h", hostname, "-p", str(port), "-D", str(bind_dn), "-w", str(bind_dn_pwd), "-b", base, "-s", scope, filter, attributes]
+    args = [CMD_LDAPSEARCH, "-LLL", "-h", hostname, "-p", str(port), "-D", str(bind_dn), "-w", str(bind_dn_pwd), "-b", base, "-s", scope, filter, attributes]
 
 
     # do no catch error (False) but print stdout/stderr if command fails
     stdout, stderr, rc = run(args, None, False)
     if rc != 0:
-        print stdout
-        print stderr
+        logging_display(WARNING, stdout)
+        logging_display(WARNING, stderr)
 
     return stdout, stderr, rc
 
@@ -365,7 +364,7 @@ def selinuxCheckPortLabel():
     args = [CMD_SUDO, CMD_SELINUX_SEMANAGE, "port", "-l"]
     stdout, stderr, rc = run(args, None, False)
     if rc != 0:
-        print "Fail to retrieve selinux ports labels (need to be 'root')"
+        logging_display(WARNING, "Fail to retrieve selinux ports labels (need to be 'root')")
         return 1
     found = 0
     for line in re.split('\n', stdout):
@@ -380,12 +379,12 @@ def selinuxCheckPortLabel():
         while port <= DIRSRVTEST_MAX_PORT:
             # check DIRSRV ports are present in the list
             if not __selinuxPortInSet(port, set):
-                print "     - selinux: add %d in %s label" % (port, SELINUX_DIRSRV_LABEL)
+                console_display("     - selinux: add %d in %s label" % (port, SELINUX_DIRSRV_LABEL))
                 args = [CMD_SUDO, CMD_SELINUX_SEMANAGE, "port", "-a", "-t", SELINUX_DIRSRV_LABEL, "-p", "tcp", str(port)]
                 stdout, stderr, rc = run(args, None, False)
                 if rc != 0:
-                    print stdout
-                    print "Fail add the port in the label: skip"
+                    logging_display(WARNING, stdout)
+                    logging_display(WARNING, "Fail add the port in the label: skip")
             port += 1
     return
 
@@ -400,13 +399,13 @@ def check_dirsrv_user():
     # check the group
     try:
         gp = grp.getgrnam(DS_GROUP)
-        print "     - group %s exists" % DS_GROUP
+        logging_display(INFO, "\t- group %s exists" % DS_GROUP)
     except KeyError:
         args = [CMD_SUDO, CMD_GRPADD, "-r", DS_GROUP]
         stdout, stderr, rc = run(args, None, False)
         if rc != 0:
-            print stdout
-            print stderr
+            logging_display(WARNING, stdout)
+            logging_display(WARNING, stderr)
             # neither group and user have been created
             return (grpCreate, userCreate, 1)
 
@@ -415,7 +414,7 @@ def check_dirsrv_user():
     # check the user
     try:
         user = pwd.getpwnam(DS_USER)
-        print "     - user %s exists" % DS_USER
+        logging_display(INFO, "\t- user %s exists" % DS_USER)
     except KeyError:
         args = [CMD_SUDO, CMD_USERADD, "-g", DS_GROUP,
                         "-c", "DS System User",
@@ -424,27 +423,27 @@ def check_dirsrv_user():
                         "-M", "-r", DS_USER]
         stdout, stderr, rc = run(args, None, False)
         if rc != 0:
-            print stdout
-            print stderr
+            logging_display(WARNING, stdout)
+            logging_display(WARNING, stderr)
             if grpCreate:
                 # try to do some cleanup
                 args = [CMD_SUDO, CMD_GRPDEL, DS_GROUP]
                 stdout, stderr, rc = run(args, None, False)
                 if rc != 0:
-                    print stdout
-                    print stderr
-                    print "Fail to add the user %s AND to remove the added goup %s" % (DS_USER, DS_GROUP)
+                    logging_display(WARNING, stdout)
+                    logging_display(WARNING, stderr)
+                    logging_display(WARNING, "Fail to add the user %s AND to remove the added goup %s" % (DS_USER, DS_GROUP))
                     return (grpCreate, userCreate, 1)
 
-            print "Fail to add the user %s" % (DS_USER)
+            logging_display(WARNING, "Fail to add the user %s" % (DS_USER))
             return (grpCreate, userCreate, 1)
 
         userCreate = True
 
     if grpCreate:
-        print "     - group %s created" % DS_GROUP
+        logging_display(INFO, "     - group %s created" % DS_GROUP)
     if userCreate:
-        print "     - user %s created" % DS_USER
+        logging_display(INFO, "     - user %s created" % DS_USER)
     return (grpCreate, userCreate, 0)
 
 
@@ -455,16 +454,16 @@ def clean_dirsrv_user(grpCreate, userCreate):
         args = [CMD_SUDO, CMD_USERDEL, DS_USER]
         stdout, stderr, rc = run(args, None, False)
         if rc != 0:
-            print stdout
-            print stderr
-            print "Fail to remove the added user %s" % (DS_USER)
+            logging_display(WARNING, stdout)
+            logging_display(WARNING, stderr)
+            logging_display(WARNING, "Fail to remove the added user %s" % (DS_USER))
         else:
-            print "     - user %s removed" % DS_USER
+            logging_display(INFO, "     - user %s removed" % DS_USER)
 
     if grpCreate:
         args = [CMD_SUDO, CMD_GRPDEL, DS_GROUP]
         stdout, stderr, rc = run(args, None, False)
-        print "     - group %s removed" % DS_GROUP
+        logging_display(INFO, "     - group %s removed" % DS_GROUP)
 
     return
 
@@ -476,7 +475,7 @@ def workaround_ticket47394():
         args = [ CMD_SUDO, CMD_CHMOD, "o+rwx", DIRSRV_LOCK_DIR]
         stdout, stderr, rc = run(args, None, False)
         if rc != 0:
-            print stdout
-            print stderr
-            print "Fail change permission %s" % (DIRSRV_LOCK_DIR)
+            logging_display(CRITICAL, stdout)
+            logging_display(CRITICAL, stderr)
+            logging_display(CRITICAL, "Fail change permission %s" % (DIRSRV_LOCK_DIR))
      

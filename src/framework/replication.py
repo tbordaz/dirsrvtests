@@ -1,5 +1,6 @@
 import decimal
 from common import *
+from dirsrvtests_log import *
 import dirutil
 import os
 import re
@@ -108,7 +109,6 @@ class ReplicationManager():
         if bindDnPwd is None:
             bindDnPwd = COMMON_PASSWORD
 
-        #print "add_replication_manager: %s:%d" % (hostname, int(port))
         inf_fd = dirutil.mk_ldapmodify_file(ENTRY_REPL_MANAGER_TEMPLATE, sub_dict)
         rc = dirutil.ldapmodify(hostname, port, bindDn, bindDnPwd, inf_fd.name, "-a -c")
         dirutil.rm_ldapmodify_file(inf_fd)
@@ -164,22 +164,23 @@ class Replica():
             (self.role != REPLICAROLE_MASTER) and
             (self.role != REPLICAROLE_HUB) and
             (self.role != REPLICAROLE_CONSUMER)):
-            print "enable_replicaion: invalid role"
+            logging_display(WARNING, "enable_replicaion: invalid role")
             return 1
 
         #check the suffix
         if self.suffix is None:
-            print "enable_replication: invalid suffix"
+            logging_display(WARNING, "enable_replication: invalid suffix")
             return 1
 
         # check serverid
         if self.serverid is None:
-            print "enable_replication: invalid serverid"
+            logging_display(WARNING, "enable_replication: invalid serverid")
             return 1
         else:
             cldir = DIRSRV_DB_DIR + "/" + DIRSRV_SLAPD_PREFIX + self.serverid
             if not dirutil.dir_exists(cldir):
-                print "enable_replication: invalid serverid: %s does not exist" % self.serverid
+                logging_display(WARNING, "enable_replication: invalid serverid: %s does not exist" % self.serverid)
+                return 1
 
 
         #check the replicaType
@@ -194,13 +195,14 @@ class Replica():
         if self.replicaType == REPLICATYPE_MASTER:
             # this is a master -> replicaId should be a decimal [0..CONSUMER_REPLICAID]
             if self.replicaId is None:
-                print "enable_replication: invalid replicaId (it should be decimal)"
+                logging_display(WARNING, "enable_replication: invalid replicaId (it should be decimal)")
                 return 1
             if not decimal.Decimal(self.replicaId):
-                print "enable_replication: invalid replicaId (it should be decimal)" + self.replicaId
+                logging_display(WARNING, "enable_replication: invalid replicaId (it should be decimal)" + self.replicaId)
                 return 1
             if ((self.replicaId <= 0) or (CONSUMER_REPLICAID <= self.replicaId)):
-                print "enable_replication: invalid replicaId (it should be [0..%d] instead of %d" % (CONSUMER_REPLICAID, self.replicaId)
+                logging_display(WARNING, "enable_replication: invalid replicaId (it should be [0..%d] instead of %d" % (CONSUMER_REPLICAID, self.replicaId))
+                return 1
         else:
             # for Hub/consumer
             self.replicaId = CONSUMER_REPLICAID
@@ -215,17 +217,18 @@ class Replica():
         filter = "(&(%s)(cn=%s))" % (SUFFIX_FILTER, self.suffix)
         stdout, stderr, rc = dirutil.ldapsearch(self.hostname, self.port, DIR_MANAGER_DN, COMMON_PASSWORD, MAPPING_TREE_DN, filter, SCOPE_ONE, "cn")
         if rc != 0:
-            print "Fail to retrieve the backend suffixe %s" % filter
+            logging_display(WARNING, "Fail to retrieve the backend suffixe %s" % filter)
+            return 1
 
         # check we have not a replica for it
         base = "cn=%s,%s" % (self.suffix, MAPPING_TREE_DN)
         stdout, stderr, rc = dirutil.ldapsearch(self.hostname, self.port, DIR_MANAGER_DN, COMMON_PASSWORD, base, REPLICA_FILTER, SCOPE_ONE, "cn")
         if rc != 0:
-            print "Fail to look up for replica"
+            logging_display(WARNING, "Fail to look up for replica")
             return 1
         for line in re.split('\n', stdout):
             if line.startswith("dn: "):
-                print "Fail the replica already exist: " + line
+                logging_display(WARNING, "Fail the replica already exist: " + line)
                 return 1
 
         # add the changelog
@@ -290,14 +293,14 @@ class ReplicaAgreement():
         del sub_dict["UID"]
         del sub_dict["SUFFIX"]
         if rc != 0:
-            print "Fail to check replication is working"
+            logging_display(WARNING, "Fail to check replication is working")
             return 1
 
 
         # check the entry is on the supplier
         stdout, stderr, rc = dirutil.ldapsearch(self.supplier_hostname, self.supplier_port, DIR_MANAGER_DN, COMMON_PASSWORD, self.suffix, "uid=%s" % uid, SCOPE_SUB, "dn")
         if rc != 0:
-            print "Fail to retrieve the test entry from the supplier"
+            logging_display(WARNING, "Fail to retrieve the test entry from the supplier")
             return 1
         found = 0
         searched_uid = "dn: uid=%s" % uid
@@ -307,7 +310,7 @@ class ReplicaAgreement():
                 break
 
         if found == 0:
-            print "Fail the test entry is not on the supplier"
+            logging_display(WARNING, "Fail the test entry is not on the supplier")
             return 1
 
         time.sleep(10)
@@ -320,7 +323,7 @@ class ReplicaAgreement():
                 stdout, stderr, rc = dirutil.ldapsearch(self.consumer_hostname, self.consumer_port, DIR_MANAGER_DN, COMMON_PASSWORD, self.suffix, "uid=%s" % uid, SCOPE_SUB, "dn")
                 if ((rc != 0) and (rc != 10)):
                     # it could still be under initialisation
-                    print "Fail to retrieve the test entry from the consumer"
+                    logging_display(WARNING, "Fail to retrieve the test entry from the consumer")
                     return 1
                 for line in re.split('\n', stdout):
                     if line.startswith(searched_uid):
@@ -334,7 +337,7 @@ class ReplicaAgreement():
                 tries += 1
 
         if found == 0:
-            print "Fail the test entry is not on the consumer"
+            logging_display(WARNING, "Fail the test entry is not on the consumer")
             return 1
 
 
@@ -343,7 +346,8 @@ class ReplicaAgreement():
 
     def create(self):
         if self.suffix is None:
-            print "Fail to create ReplicaAgreement: suffix not defined"
+            logging_display(WARNING, "Fail to create ReplicaAgreement: suffix not defined")
+            return 1
 
         if self.supplier_hostname is None:
             self.supplier_hostname = "localhost"
@@ -353,22 +357,22 @@ class ReplicaAgreement():
 
         supplier_free, consumer_free = dirutil.check_ports(self.supplier_port, self.consumer_port)
         if supplier_free:
-            print "Fail to create ReplicaAgreement: supplier not on port %d" % self.supplier_port
+            logging_display(WARNING, "Fail to create ReplicaAgreement: supplier not on port %d" % self.supplier_port)
             return 1
         if consumer_free:
-            print "Fail to create ReplicaAgreement: consumer not on port %d" % self.consumer_port
+            logging_display(WARNING, "Fail to create ReplicaAgreement: consumer not on port %d" % self.consumer_port)
             return 1
 
         # check replica_mgr is valid
         stdout, stderr, rc = dirutil.ldapsearch(self.consumer_hostname, self.consumer_port, self.replica_mgr_dn, self.replica_mgr_pwd, "", "objectclass=*", SCOPE_BASE, "dn")
         if rc != 0:
-            print "Fail to valid replication manager %s on %s:%d" % (self.replica_mgr_dn, self.consumer_hostname, self.consumer_port)
+            logging_display(WARNING, "Fail to valid replication manager %s on %s:%d" % (self.replica_mgr_dn, self.consumer_hostname, self.consumer_port))
 
         if self.label is None:
             self.label = "RA to %s:%d" % (self.replica_mgr_dn, self.consumer_hostname)
 
         if self.__create() != 0:
-            print "Fail to create the replication agreement entry"
+            logging_display(WARNING, "Fail to create the replication agreement entry")
             return 1
 
         return 0

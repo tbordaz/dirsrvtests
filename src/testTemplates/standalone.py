@@ -1,4 +1,5 @@
 
+from framework.dirsrvtests_log import console_display
 from standAloneDS import *
 import dirutil
 import shutil
@@ -25,7 +26,7 @@ class MyTicketname():
         self.step = 0
 
     def __log_msg(self, phase, msg):
-        print 'Test %d [%s (%d)]: %s' % (self.bugid, phase, self.__get_step(), msg)
+        return "Test %6d [%-7s (%2d)]: %s" % (self.bugid, phase, self.__get_step(), msg)
         #print '{0:10} ==> {1:10d}'.format(phase, self.bugid)
 
     def __init_step(self):
@@ -41,17 +42,17 @@ class MyTicketname():
         self.__init_step()
 
         if not self.instance is None:
-            self.__log_msg("startup", "Instance already created")
+            logging_display(WARNING, self.__log_msg("startup", "Instance already created"))
             return 1
         self.__next_step()
 
         self.instance = StandAloneDS("standalone", self.bugid)
         if self.instance.create_instance() != 0:
-            self.__log_msg("startup", "Fail to create the instance")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the instance"))
             return 1
         self.__next_step()
 
-        self.__log_msg("startup", "PASS")
+        console_display(self.__log_msg("startup", "PASS"))
         return 0
 
 
@@ -59,16 +60,16 @@ class MyTicketname():
         self.__init_step()
 
         if self.instance is None:
-            self.__log_msg("cleanup", "Invalid instance value")
+            logging_display(WARNING, self.__log_msg("cleanup", "Invalid instance value"))
             return 1
         self.__next_step()
 
         if self.instance.remove_instance() != 0:
-            self.__log_msg("cleanup", "Fail to cleanup the instance")
+            logging_display(WARNING, self.__log_msg("cleanup", "Fail to cleanup the instance"))
             return 1
         self.__next_step()
 
-        self.__log_msg("cleanup", "PASS")
+        console_display(self.__log_msg("cleanup", "PASS"))
         return 0
 
 

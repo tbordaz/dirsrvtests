@@ -68,29 +68,29 @@ class SingleMasterDS():
 
         ports = dirutil.check_ports(normal_port, secure_port)
         if not ((ports[0] is True) and (ports[1] is True)):
-            print "Port ldap:%d and/or ldaps:%d already taken" % (normal_port, secure_port)
+            logging_display(WARNING, "Port ldap:%d and/or ldaps:%d already taken" % (normal_port, secure_port))
             return False
 
         if self.hostname is None:
-            print "Invalid hostname"
+            logging_display(WARNING, "Invalid hostname")
             return False
 
         if self.domain_name is None:
-            print "Invalid domain name"
+            logging_display(WARNING, "Invalid domain name")
             return False
 
         return True
 
     def __create_instance(self, serverid=None, normal_port=None, secure_port=None):
         if not self.__valid_inst_info(normal_port, secure_port):
-            print "Invalid ports number: %d - %d" % (int(normal_port), int(secure_port))
+            logging_display(WARNING, "Invalid ports number: %d - %d" % (int(normal_port), int(secure_port)))
             return None
         instance = DsInstance(serverid, self.domain_name, self.hostname, self.rootDNPwd, self.suffix , self.userID, self.groupID, normal_port )
         if instance.create_instance() != 0:
-            print "Fail to create the instance"
+            logging_display(WARNING, "Fail to create the instance")
             return None
         else:
-            print "     - Instance slapd-%s created" % serverid
+            logging_display(INFO, "     - Instance slapd-%s created" % serverid)
             return instance
 
     def create(self):
@@ -108,20 +108,22 @@ class SingleMasterDS():
     def remove(self):
         rc = 0
         if self.master_dsinstance == None:
-            print "Error: master not defined"
+            logging_display(WARNING, "Error: master not defined")
             rc = 1
         else:
             if self.master_dsinstance.remove_instance() != 0:
-                print "Error: Fail to remove the master instance"
+                logging_display(WARNING, "Error: Fail to remove the master instance")
                 rc = 1
 
+        logging_display(INFO, "     - Instance slapd-%s removed" % self.master_dsinstance.serverid)
         if self.consumer_dsinstance == None:
-            print "Error: master not defined"
+            logging_display(WARNING, "Error: master not defined")
             rc = 1
         else:
             if self.consumer_dsinstance.remove_instance() != 0:
-                print "Error: Fail to remove the consumer instance"
+                logging_display(WARNING, "Error: Fail to remove the consumer instance")
                 rc = 1
+        logging_display(INFO, "     - Instance slapd-%s removed" % self.consumer_dsinstance.serverid)
                 
         return rc
 
@@ -129,15 +131,15 @@ class SingleMasterDS():
 
         # initialise replication on master
         if self.master_dsinstance.setup_master(SINGLEMASTER_MASTER_REPLICAID) != 0:
-            print "Fail to setup replication on the master"
+            logging_display(WARNING, "Fail to setup replication on the master")
             return 1
-        print "     - Master replication enabled"
+        logging_display(INFO, "     - Master replication enabled")
 
         # initialize replication on consumer
         if self.consumer_dsinstance.setup_consumer() != 0:
-            print "Fail to setup replication on the consumer"
+            logging_display(WARNING, "Fail to setup replication on the consumer")
             return 1
-        print "     - Consumer replication enabled"
+        logging_display(INFO, "     - Consumer replication enabled")
 
         # initialize a replication agreement master->consumer
         repl_mgr = self.master_dsinstance.get_replication_manager()
@@ -149,15 +151,15 @@ class SingleMasterDS():
                                 replica_mgr_dn, replica_mgr_pwd)
         if ra.create() != 0:
             return 1
-        print "     - Replica agreement M -> C done"
+        logging_display(INFO, "     - Replica agreement M -> C done")
 
         if ra.initialize_consumer() != 0:
             return 1
-        print "     - Consumer Initialized"
+        logging_display(INFO, "     - Consumer Initialized")
 
         if ra.check_replication() != 0:
             return 1
-        print "     - Replication checked"
+        logging_display(INFO, "     - Replication checked")
 
         return 0
 

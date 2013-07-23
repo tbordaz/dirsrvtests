@@ -1,3 +1,4 @@
+from dirsrvtests_log import *
 from singleMasterDS import *
 import dirutil
 import shutil
@@ -48,8 +49,7 @@ class Ticket570():
 
 
     def __log_msg(self, phase, msg):
-        print 'Test %d [%s (%d)]: %s' % (self.bugid, phase, self.__get_step(), msg)
-        #print '{0:10} ==> {1:10d}'.format(phase, self.bugid)
+        return "Test %6d [%-7s (%2d)]: %s" % (self.bugid, phase, self.__get_step(), msg)
 
     def __init_step(self):
         self.step = 0
@@ -64,22 +64,21 @@ class Ticket570():
     def startup(self):
         self.__init_step()
 
-        self.__log_msg("startup", "begin")
         # Allocate the topology
         if self.topology is not None:
-            self.__log_msg("startup", "topology already initialized")
+            logging_display(INFO, self.__log_msg("startup", "topology already initialized"))
         self.topology = SingleMasterDS("master", "consumer", self.bugid)
         self.__next_step()
 
         # create the master/consumer instance
         if self.topology.create() != 0:
-            self.__log_msg("startup", "Fail to create the singleMaster topology")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the singleMaster topology"))
             return 1
         self.__next_step()
 
         # setup replication
         if self.topology.setup_replication() != 0:
-            self.__log_msg("startup", "Fail to create the replication topology")
+            logging_display(WARNING, self.__log_msg("startup", "Fail to create the replication topology"))
             return 1
         self.__next_step()
 
@@ -89,18 +88,16 @@ class Ticket570():
     def cleanup(self):
         self.__init_step()
 
-        self.__log_msg("cleanup", "begin")
         if self.topology.remove() != 0:
-            self.__log_msg("cleanup", "Fail to remove the singleMaster topology")
+            logging_display(WARNING, self.__log_msg("cleanup", "Fail to remove the singleMaster topology"))
             return 1
         self.__next_step()
 
-        self.__log_msg("cleanup", "PASS")
+        console_display(self.__log_msg("cleanup", "PASS"))
         return 0
 
     def run(self):
         self.__init_step()
-        self.__log_msg("run", "begin")
 
         master = self.topology.get_master_instance()
         suffix = self.topology.get_suffix()
@@ -116,7 +113,7 @@ class Ticket570():
         dirutil.rm_ldapmodify_file(inf_fd)
 
         if rc != 0:
-            print "Fail to create the test entry"
+            logging_display(WARNING, self.__log_msg("run", "Fail to create the test entry"))
             return 1
         self.__next_step()
 
@@ -130,14 +127,14 @@ class Ticket570():
         dirutil.rm_ldapmodify_file(inf_fd)
 
         if rc != 0:
-            self.__log_msg("run", "FAIL: modify return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: modify return %d" % rc))
             return 1
         self.__next_step()
 
         # check it contains 'FOO'
         stdout, stderr, rc = dirutil.ldapsearch(self.topology.get_hostname(), master.get_port(), DIR_MANAGER_DN, COMMON_PASSWORD, suffix, "uid=%s" % uid, SCOPE_SUB, "cn")
         if rc != 0:
-            self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc))
             return 1
         self.__next_step()
 
@@ -147,10 +144,9 @@ class Ticket570():
                     found = 1
                     break
         if found == 0:
-            self.__log_msg("run", "FAIL: entry does not contain FOO")
-            self.__log_msg("run", stdout)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: entry does not contain FOO"))
+            logging_display(WARNING, self.__log_msg("run", stdout))
             return 1
-        #print stdout
         self.__next_step()
 
 
@@ -163,14 +159,14 @@ class Ticket570():
         dirutil.rm_ldapmodify_file(inf_fd)
 
         if rc != 0:
-            self.__log_msg("run", "FAIL: modify return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: modify return %d" % rc))
             return 1
         self.__next_step()
 
         # check it contains 'FOO'
         stdout, stderr, rc = dirutil.ldapsearch(self.topology.get_hostname(), master.get_port(), DIR_MANAGER_DN, COMMON_PASSWORD, suffix, "uid=%s" % uid, SCOPE_SUB, "cn")
         if rc != 0:
-            self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc))
             return 1
         self.__next_step()
 
@@ -180,10 +176,9 @@ class Ticket570():
                     found = 1
                     break
         if found == 0:
-            self.__log_msg("run", "FAIL: entry does not contain FOO")
-            self.__log_msg("run", stdout)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: entry does not contain FOO"))
+            logging_display(WARNING, self.__log_msg("run", stdout))
             return 1
-        #print stdout
         self.__next_step()
 
 
@@ -197,14 +192,14 @@ class Ticket570():
         dirutil.rm_ldapmodify_file(inf_fd)
 
         if rc != 0:
-            self.__log_msg("run", "FAIL: modify return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: modify return %d" % rc))
             return 1
         self.__next_step()
 
         # check it contains 'FOO'
         stdout, stderr, rc = dirutil.ldapsearch(self.topology.get_hostname(), master.get_port(), DIR_MANAGER_DN, COMMON_PASSWORD, suffix, "uid=%s" % uid, SCOPE_SUB, "cn")
         if rc != 0:
-            self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: retrieve the entry return %d" % rc))
             return 1
         self.__next_step()
 
@@ -214,11 +209,10 @@ class Ticket570():
                     found = 1
                     break
         if found == 0:
-            self.__log_msg("run", "FAIL: entry does not contain foo")
-            self.__log_msg("run", stdout)
+            logging_display(WARNING, self.__log_msg("run", "FAIL: entry does not contain foo"))
+            logging_display(WARNING, self.__log_msg("run", stdout))
             return 1
-        #print stdout
         self.__next_step()
 
-        self.__log_msg("run", "PASS")
+        console_display(self.__log_msg("run", "PASS"))
         return 0

@@ -100,5 +100,18 @@ CMD_GRPDEL  = "/usr/sbin/groupdel"
 CMD_SETUP   = "/usr/sbin/setup-ds.pl"
 CMD_REMOVE  = "/usr/sbin/remove-ds.pl"
 CMD_SELINUX_SEMANAGE = "/usr/sbin/semanage"
+CMD_LDAPMODIFY = "/bin/ldapmodify"
+CMD_LDAPSEARCH = "/bin/ldapsearch"
 
+#
+# logging for the dirsrvtests themself
+#   - CRITICAL: general failure of the framework. Remaining tests will not be proceeded
+#   - WARNING : specific failure during a given test. The test will terminate and remaining tests will be proceeded
+#   - INFO    : specific failure during a given test. The test will continue and remaining tests will be proceeded
+#   - DEBUG   : informative message usually used during test debugging
+#
+CRITICAL = 4
+WARNING  = 3
+INFO     = 2
+DEBUG    = 1
 
