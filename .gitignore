@@ -2,4 +2,4 @@
 ###################
 logs/
 
-src/framework/*.pyc
+*.pyc
