@@ -12,10 +12,49 @@ import tempfile
 import base64
 import stat
 
+runByNose=False
 
 def create_object():
     t = MyTicketname()
     return t
+
+def test_ticketname():
+    global runByNose
+
+    #
+    # in order to prevent display of message on the console
+    #
+    runByNose = True
+
+
+
+    #
+    # initialize the file logging for this test
+    # True: because this is the Nose wrapper
+    #
+    ticket = os.path.dirname(__file__)
+    assert (logging_init(ticket, True) == 0)
+
+    t = MyTicketname()
+    assert (t is not None)
+    try:
+
+        assert(t.startup() == 0)
+        try:
+            assert(t.run() == 0)
+        except AssertionError:
+            raise
+        except:
+            pass
+
+    except AssertionError:
+        raise
+    except:
+        pass
+
+    finally:
+        assert(t.cleanup() == 0)
+
 
 class MyTicketname():
 
