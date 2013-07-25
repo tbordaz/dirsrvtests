@@ -36,6 +36,8 @@ cn: newvalue1
 cn: newvalue2
 """
 
+runByNose=False
+
 def create_object():
     t = Ticket570()
     return t

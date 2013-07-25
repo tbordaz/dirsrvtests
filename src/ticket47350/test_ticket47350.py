@@ -11,6 +11,10 @@ import tempfile
 import base64
 import stat
 
+
+runByNose=False
+
+
 def create_object():
     t = Ticket47350()
     return t
