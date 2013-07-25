@@ -36,7 +36,7 @@ cn: newvalue1
 cn: newvalue2
 """
 
-def create_test():
+def create_object():
     t = Ticket570()
     return t
 
@@ -82,7 +82,7 @@ class Ticket570():
             return 1
         self.__next_step()
 
-        self.__log_msg("startup", "PASS")
+        console_display(self.__log_msg("startup", "PASS"))
         return 0
 
     def cleanup(self):

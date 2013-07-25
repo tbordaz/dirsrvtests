@@ -13,7 +13,7 @@ import stat
 import random
 import string
 
-def create_test():
+def create_object():
     t = Myticketname()
     return t
 

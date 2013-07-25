@@ -13,7 +13,7 @@ import base64
 import stat
 
 
-def create_test():
+def create_object():
     t = MyTicketname()
     return t
 

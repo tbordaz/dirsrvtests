@@ -4,7 +4,7 @@ from standAloneDS import *
 import dirutil
 import shutil
 import pwd
-import sys
+import sys, getopt
 import os
 import re
 import time
@@ -52,9 +52,49 @@ add: aci
 aci: (targetattr="*")(version 3.0; acl "Allow self entry access"; allow (read,search,compare) userdn = "ldap:///self";)
 """
 
-def create_test():
+runByNose=False
+
+def create_object():
     t = Ticket47331()
     return t
+
+def test_ticket47331():
+    global runByNose
+
+    #
+    # in order to prevent display of message on the console
+    #
+    runByNose = True
+
+
+
+    #
+    # initialize the file logging for this test
+    # True: because this is the Nose wrapper
+    #
+    ticket = os.path.dirname(__file__)
+    assert (logging_init(ticket, True) == 0)
+
+    t = Ticket47331()
+    assert (t is not None)
+    try:
+
+        assert(t.startup() == 0)
+        try:
+            assert(t.run() == 0)
+        except AssertionError:
+            raise
+        except:
+            pass
+
+    except AssertionError:
+        raise
+    except:
+        pass
+
+    finally:
+        assert(t.cleanup() == 0)
+
 
 class Ticket47331():
 
@@ -91,6 +131,7 @@ class Ticket47331():
             return 1
         self.__next_step()
 
+
         console_display(self.__log_msg("startup", "PASS"))
         return 0
 
@@ -107,6 +148,7 @@ class Ticket47331():
             return 1
         self.__next_step()
 
+
         console_display(self.__log_msg("cleanup", "PASS"))
         return 0
 
@@ -120,6 +162,7 @@ class Ticket47331():
             logging_display(WARNING, self.__log_msg("cleanup", "Fail to cleanup the instance"))
             return 1
         self.__next_step()
+
 
         console_display(self.__log_msg("cleanup", "PASS"))
         return 0
@@ -212,6 +255,7 @@ class Ticket47331():
             logging_display(WARNING, self.__log_msg("run", "Retrieved entry \"%s\" is not the expected (%s)" % retrieved_dn, expected_dn))
             return 1
         self.__next_step()
+
 
         console_display(self.__log_msg("run", "PASS"))
         return 0

@@ -61,8 +61,9 @@ def initialization():
     
     #
     # first thing to do to allow logging
+    # False: because this is not the Nose wrapper
     #
-    if logging_init(sys.argv[0]) != 0:
+    if logging_init(sys.argv[0], False) != 0:
         return 1
     console_init()
 
@@ -94,7 +95,6 @@ def terminaison():
 # list the specific tests to run (e.g "ticket570")
 listSpecificTests = []
 
-
 # list the specific directory that are NOT tests
 listDirsToSkip = ["testTemplates", "framework"]
 
@@ -117,12 +117,13 @@ console_display("Bugs fixes verification (%d bugs)" % nbTests)
 for testModule in testModules:
     
     # import the module containing the test
-    test = import_module(testModule)
+    # "test_" added for nose
+    test = import_module("test_" + testModule)
 
     # create an instance of the test. I was not able to call
     # outside of the module, the instance creation method
     # So I use a generic method 'create_test'
-    test_object = test.create_test()
+    test_object = test.create_object()
     if test_object.startup() == 0:
         startup_success += 1
 
