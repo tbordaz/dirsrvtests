@@ -90,7 +90,7 @@ class DsInstance():
                 else:
                     args = [CMD_REMOVE, "-i", instance_name]
             except:
-                args = [CMD_SUDO, CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
+                args = [CMD_SUDO, CMD_REMOVE, "-i", instance_name]
 
             dirutil.run(args)
             return 0
