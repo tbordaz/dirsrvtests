@@ -64,11 +64,15 @@ class DsInstance():
         inf_txt = dirutil.template_str(INF_TEMPLATE, self.sub_dict)
         inf_fd = dirutil.write_tmp_file(inf_txt)
         if dirutil.file_exists(CMD_SETUP):
-            logName = os.getlogin()
-            if logName != "root":
+            try:
+                logName = os.getlogin()
+                if logName != "root":
+                    args = [CMD_SUDO, CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
+                else:
+                    args = [CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
+            except:
                 args = [CMD_SUDO, CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
-            else:
-                args = [CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
+
             dirutil.run(args)
             self.open_ports.append(self.port);
             return 0
@@ -79,11 +83,15 @@ class DsInstance():
     def remove_instance(self):
         instance_name =  DIRSRV_SLAPD_PREFIX + self.serverid
         if dirutil.file_exists(CMD_REMOVE):
-            logName = os.getlogin()
-            if logName != "root":
-                args = [CMD_SUDO, CMD_REMOVE, "-i", instance_name]
-            else:
-                args = [CMD_REMOVE, "-i", instance_name]
+            try:
+                logName = os.getlogin()
+                if logName != "root":
+                    args = [CMD_SUDO, CMD_REMOVE, "-i", instance_name]
+                else:
+                    args = [CMD_REMOVE, "-i", instance_name]
+            except:
+                args = [CMD_SUDO, CMD_SETUP, "--silent", "--logfile", "/tmp/tofuthierry", "-f", inf_fd.name]
+
             dirutil.run(args)
             return 0
         else:
