@@ -25,17 +25,10 @@ class StandAloneDS():
             if self.serverid is None:
                 self.serverid = STANDALONE_SERVERID
 
-            # compute the ports (normal) from bugid
-            if bugid is None:
-                self.normal_port = 1389
-            else:
-                self.normal_port = bugid % MAX_PORTNUMBER
-
-            # Assuming it can be run by non "root" take the port above 1000
-            if self.normal_port < 1000:
-                self.normal_port += 1000
-
-            self.secure_port = self.normal_port + 1
+            # force the ports (normal/secure)
+            self.normal_port = STANDALONE_PORT
+            self.secure_port = STANDALONE_SPORT
+            
             self.dsinstance = None
 
             # set hostname
@@ -95,6 +88,15 @@ class StandAloneDS():
                 return False
 
             return True
+
+        def stop(self):
+            return self.dsinstance.stop()
+
+        def start(self):
+            return self.dsinstance.start()
+
+        def update_schema(self, schemaFile=None):
+            return self.dsinstance.update_schema(schemaFile)
 
         def create_instance(self, realCreation=True):
             if not self.__valid_inst_info():

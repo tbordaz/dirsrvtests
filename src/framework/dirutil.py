@@ -14,6 +14,9 @@ import sys
 import grp
 import pwd
 import logging
+import shutil
+import time
+import datetime
 
 module_logger = logging.getLogger('dirutil')
 
@@ -32,6 +35,9 @@ except ImportError:
             return "Command '%s' returned non-zero exit status %d" % (self.cmd, self.returncode)
 
 
+def printTimestamp():
+        ts = time.time()
+        print datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 def class2bugid(object):
     name = object.__class__.__name__
@@ -89,6 +95,20 @@ def dir_exists(filename):
             return False
     except:
         return False
+
+def copy_file(srcfile, dstfile):
+    if not file_exists(srcfile):
+        logging_display(WARNING, "Copy fails %s no such file" % srcfile)
+    shutil.copyfile(srcfile, dstfile)
+    
+
+def findFirstValue(stream, attribute):
+    attribute_pattern = "%s: " % attribute
+    for line in re.split('\n', stream):
+        if line.startswith(attribute_pattern):
+            attr, value = re.split(': ', line)
+            return value
+    return None
 
 def shell_quote(string):
     return "'" + string.replace("'", "'\\''") + "'"

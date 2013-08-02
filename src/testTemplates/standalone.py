@@ -118,6 +118,6 @@ class MyTicketname():
 
         # body of the test case
 
-        self.__log_msg("run", "PASS")
+        console_display(self.__log_msg("run", "PASS"))
         return 0
 

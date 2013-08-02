@@ -93,7 +93,7 @@ def terminaison():
 
 
 # list the specific tests to run (e.g "ticket570")
-listSpecificTests = []
+listSpecificTests = ["ticket490"]
 
 # list the specific directory that are NOT tests
 listDirsToSkip = ["testTemplates", "framework"]

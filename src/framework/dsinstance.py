@@ -1,9 +1,11 @@
+
 from common import *
 from dirsrvtests_log import *
 import replication
 import dirutil
 import os
 import replication
+import backend
 
 INF_TEMPLATE = """
 [General]
@@ -60,6 +62,73 @@ class DsInstance():
     def get_hostname(self):
         return self.fqdn
     
+    def __systemctl_op(self, action, instanceName=None):
+        if ((action != CMD_OPT_START) and (action != CMD_OPT_STOP)):
+            return 1
+        
+        if instanceName is None:
+            # It applies on all instances
+            option = "dirsrv.target"
+        else:
+            option = "dirsrv@%s.service" % instanceName
+        
+        try:
+            logName = os.getlogin()
+            if logName != "root":
+                args = [CMD_SUDO, CMD_SYSTEMCTL, action, option]
+            else:
+                args = [CMD_SYSTEMCTL, action, option]
+        except:
+                args = [CMD_SUDO, CMD_SYSTEMCTL, action, option]
+
+        stdout, stderr, rc = dirutil.run(args)
+        if rc != 0:
+            logging_display(WARNING, "Fail to issue: %s %s %s" % (CMD_SYSTEMCTL, action, option))
+            logging_display(WARNING, stdout)
+            return 1
+        
+        return rc
+
+    def stop(self):
+        rc = self.__systemctl_op(CMD_OPT_STOP, self.serverid)
+        return rc
+
+    def start(self):
+        rc = self.__systemctl_op(CMD_OPT_START, self.serverid)
+        return rc
+
+    def update_schema(self, schemaFile=None):
+        if schemaFile is None:
+            return 1
+        targetFile = DIRSRV_INSTANCES_DIR + "/" + DIRSRV_SLAPD_PREFIX + self.serverid + "/" + DIRSRV_SCHEMA_DIR + "/" + os.path.basename(schemaFile)
+
+        # copy the file
+        args = [CMD_SUDO, CMD_COPY, schemaFile, targetFile]
+        stdout, stderr, rc = dirutil.run(args)
+        if rc != 0:
+            logging_display(WARNING, "Fail to copy: %s %s" % (schemaFile, targetFile))
+            logging_display(WARNING, stdout)
+            return 1
+
+        # set the dirsrv owner
+        args = [CMD_SUDO, CMD_CHOWN, DS_USER + ":" + DS_GROUP, targetFile]
+        stdout, stderr, rc = dirutil.run(args)
+        if rc != 0:
+            logging_display(WARNING, "Fail to chown: %s %s" % (DS_USER + ":" + DS_GROUP, targetFile))
+            logging_display(WARNING, stdout)
+            return 1
+
+        # set the dirsrv owner
+        args = [CMD_SUDO, CMD_CHMOD, "440", targetFile]
+        stdout, stderr, rc = dirutil.run(args)
+        if rc != 0:
+            logging_display(WARNING, "Fail to chmod: %s" % (targetFile))
+            logging_display(WARNING, stdout)
+            return 1
+
+        return 0
+
+
     def create_instance(self):
         inf_txt = dirutil.template_str(INF_TEMPLATE, self.sub_dict)
         inf_fd = dirutil.write_tmp_file(inf_txt)

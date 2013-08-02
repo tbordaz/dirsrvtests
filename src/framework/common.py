@@ -1,10 +1,14 @@
 #
 # Directory file/dir names
 #
-DIRSRV_DB_DIR = "/var/lib/dirsrv"
-DIRSRV_LOCK_DIR = "/var/lock/dirsrv"
-DIRSRV_CLDB_DIR = "changelogdb"
-DIRSRV_SLAPD_PREFIX = "slapd-"
+DIRSRV_INSTANCES_DIR = "/etc/dirsrv"
+DIRSRV_DB_DIR        = "/var/lib/dirsrv"
+DIRSRV_LOCK_DIR      = "/var/lock/dirsrv"
+DIRSRV_CLDB_DIR      = "changelogdb"
+DIRSRV_SLAPD_PREFIX  = "slapd-"
+DIRSRV_SCHEMA_DIR    = "schema"
+
+DIRSRV_CMD_LDIF2DB   = "ldif2db"
 
 #
 # Directory entries
@@ -12,6 +16,8 @@ DIRSRV_SLAPD_PREFIX = "slapd-"
 DIR_MANAGER_DN = "cn=directory manager"
 REPL_MANAGER_DN = "uid=rmanager,cn=config"
 MAPPING_TREE_DN = "cn=mapping tree,cn=config"
+LDBM_CONFIG = "cn=ldbm database,cn=plugins,cn=config"
+CONFIG_DN = "cn=config"
 
 COMMON_PASSWORD = "Secret123"
 
@@ -32,6 +38,10 @@ SCOPE_SUB = "sub"
 SUFFIX_FILTER = "nsslapd-state=backend"
 REPLICA_FILTER = "objectclass=nsDS5Replica"
 ATTR_REPLICAROOT = "nsDS5ReplicaRoot"
+ATTR_CACHEMEMSIZE= "nsslapd-cachememsize"
+ATTR_BACKEND = "nsslapd-backend"
+ATTR_DN = "dn"
+ATTR_INSTANCEDIR = "nsslapd-instancedir"
 
 
 #
@@ -102,6 +112,14 @@ CMD_REMOVE  = "/usr/sbin/remove-ds.pl"
 CMD_SELINUX_SEMANAGE = "/usr/sbin/semanage"
 CMD_LDAPMODIFY = "/bin/ldapmodify"
 CMD_LDAPSEARCH = "/bin/ldapsearch"
+CMD_SYSTEMCTL  = "/bin/systemctl"
+CMD_OPT_START  = "start"
+CMD_OPT_STOP   = "stop"
+CMD_MOVE       = "/bin/mv"
+CMD_COPY       = "/bin/cp"
+CMD_CHOWN      = "/bin/chown"
+CMD_CHMOD      = "/bin/chmod"
+CMD_GUNZIP     = "/usr/bin/gunzip"
 
 #
 # logging for the dirsrvtests themself
