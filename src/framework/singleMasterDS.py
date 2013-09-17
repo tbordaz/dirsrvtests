@@ -114,8 +114,8 @@ class SingleMasterDS():
             if self.master_dsinstance.remove_instance() != 0:
                 logging_display(WARNING, "Error: Fail to remove the master instance")
                 rc = 1
+            logging_display(INFO, "     - Instance slapd-%s removed" % self.master_dsinstance.serverid)
 
-        logging_display(INFO, "     - Instance slapd-%s removed" % self.master_dsinstance.serverid)
         if self.consumer_dsinstance == None:
             logging_display(WARNING, "Error: master not defined")
             rc = 1
@@ -123,7 +123,7 @@ class SingleMasterDS():
             if self.consumer_dsinstance.remove_instance() != 0:
                 logging_display(WARNING, "Error: Fail to remove the consumer instance")
                 rc = 1
-        logging_display(INFO, "     - Instance slapd-%s removed" % self.consumer_dsinstance.serverid)
+            logging_display(INFO, "     - Instance slapd-%s removed" % self.consumer_dsinstance.serverid)
                 
         return rc
 
